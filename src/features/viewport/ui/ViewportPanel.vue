@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { onBeforeUnmount, ref } from "vue";
 import {
   Move,
   Maximize,
@@ -9,18 +9,31 @@ import {
   ScanLine,
 } from "lucide-vue-next";
 import type { StudioDocument, Projection } from "../../../shared/types";
+import type { HistoryController } from "../../history";
 import { usePreview } from "../model/usePreview";
 import { dragView, wheelZoom } from "../lib/gestures";
-const { doc } = defineProps<{ doc: StudioDocument }>();
+const props = defineProps<{
+  doc: StudioDocument;
+  history: HistoryController;
+}>();
+const { doc, history } = props;
 const canvas = ref<HTMLCanvasElement>();
 const { rendering } = usePreview(doc, canvas);
 const guides = ref(false);
 let start: { x: number; y: number; p: Projection } | null = null;
+
 function down(e: PointerEvent) {
   if (e.button !== 0) return;
+  // A wheel gesture may still be coalescing; finish it separately so this drag
+  // becomes its own operation.
+  flushWheelGesture();
   start = { x: e.clientX, y: e.clientY, p: { ...doc.projection } };
   (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+  // Escape aborts the drag: stop tracking so later pointermove can't resurrect
+  // the half-finished view after history has rolled it back.
+  history.beginGesture("拖动旋转视角", "view", () => (start = null));
 }
+
 function move(e: PointerEvent) {
   if (!start) return;
   Object.assign(
@@ -33,8 +46,39 @@ function move(e: PointerEvent) {
     ),
   );
 }
+
+/** Ends a drag. `committed` is false for pointercancel / lost capture. */
+function end(committed: boolean) {
+  if (!start) return;
+  start = null;
+  if (committed) history.endGesture();
+  else history.cancelGesture();
+}
+
+let wheelTimer = 0;
+function flushWheelGesture() {
+  if (!wheelTimer) return;
+  clearTimeout(wheelTimer);
+  wheelTimer = 0;
+  history.endGesture();
+}
 function wheel(e: WheelEvent) {
+  // A burst of wheel events counts as one continuous zoom operation.
+  if (!wheelTimer) history.beginGesture("滚轮缩放视角", "view");
   doc.projection.zoom = wheelZoom(doc.projection.zoom, e.deltaY);
+  clearTimeout(wheelTimer);
+  wheelTimer = window.setTimeout(flushWheelGesture, 220);
+}
+onBeforeUnmount(flushWheelGesture);
+function zoomStep(delta: number) {
+  history.transact(delta < 0 ? "放大视角" : "缩小视角", "view", () => {
+    doc.projection.zoom = wheelZoom(doc.projection.zoom, delta);
+  });
+}
+function resetZoom() {
+  history.transact("重置缩放", "view", () => {
+    doc.projection.zoom = 1;
+  });
 }
 </script>
 <template>
@@ -58,9 +102,9 @@ function wheel(e: WheelEvent) {
         :class="{ guides }"
         @pointerdown="down"
         @pointermove="move"
-        @pointerup="start = null"
-        @pointercancel="start = null"
-        @lostpointercapture="start = null"
+        @pointerup="end(true)"
+        @pointercancel="end(false)"
+        @lostpointercapture="end(false)"
         @wheel.prevent="wheel"
       >
         <canvas ref="canvas" aria-label="小行星实时投影画布" />
@@ -77,16 +121,10 @@ function wheel(e: WheelEvent) {
         ><Move :size="14" /> 滚轮缩放
       </div>
       <div class="tool-buttons">
-        <button
-          aria-label="缩小"
-          @click="doc.projection.zoom = wheelZoom(doc.projection.zoom, 100)"
-        >
+        <button aria-label="缩小" @click="zoomStep(100)">
           <Minus :size="16" /></button
         ><span>{{ Math.round(doc.projection.zoom * 100) }}%</span
-        ><button
-          aria-label="放大"
-          @click="doc.projection.zoom = wheelZoom(doc.projection.zoom, -100)"
-        >
+        ><button aria-label="放大" @click="zoomStep(-100)">
           <Plus :size="16" /></button
         ><b /><button
           aria-label="切换辅助线"
@@ -94,7 +132,7 @@ function wheel(e: WheelEvent) {
           @click="guides = !guides"
         >
           <ScanLine :size="17" /></button
-        ><button aria-label="重置缩放" @click="doc.projection.zoom = 1">
+        ><button aria-label="重置缩放" @click="resetZoom">
           <Maximize :size="16" />
         </button>
       </div>

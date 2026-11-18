@@ -725,3 +725,243 @@ footer b {
     line-height: 1.8;
   }
 }
+
+/* ---- 操作历史 ---- */
+.history-toolbar {
+  grid-column: 1/-1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 9px 10px;
+  margin-bottom: 2px;
+}
+.history-buttons {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.history-button {
+  display: flex;
+  padding: 6px;
+  border-radius: 5px;
+  color: #5f7461;
+  background: #f7faf5;
+  border: 1px solid #e6ebe2;
+}
+.history-button:hover:not(:disabled) {
+  background: #eef5ec;
+}
+.history-button:disabled {
+  cursor: default;
+  opacity: 0.35;
+}
+.history-buttons .divider {
+  width: 1px;
+  height: 17px;
+  background: #e3e8df;
+  margin: 0 3px;
+}
+.history-branch-select {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #7c8874;
+  font-size: 9px;
+  margin-left: auto;
+}
+.history-branch-select select {
+  padding: 6px 7px;
+  font-size: 10px;
+  width: auto;
+  min-width: 118px;
+  max-width: 170px;
+}
+.history-message {
+  flex-basis: 100%;
+  margin: 2px 2px 0;
+  font-size: 9px;
+  color: #8b9487;
+  line-height: 1.6;
+}
+.history-panel {
+  padding: 18px 16px;
+}
+.history-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  color: #9ba391;
+  font-size: 9px;
+  margin: -8px 0 12px;
+}
+.history-list {
+  list-style: none;
+  margin: 0;
+  padding: 0 2px 0 0;
+  max-height: 232px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+.history-list li {
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+  border-radius: 6px;
+}
+.history-list li + li {
+  margin-top: 2px;
+}
+.history-list li.active {
+  background: #eef4ea;
+}
+.history-list li.future {
+  opacity: 0.55;
+}
+.history-node {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-align: left;
+  padding: 7px 6px;
+  border-radius: 6px;
+  color: #61705f;
+}
+.history-node:hover {
+  background: #f3f7f0;
+}
+.history-list li.active .history-node {
+  color: #3c5f42;
+}
+.node-index {
+  flex: 0 0 20px;
+  font-size: 8px;
+  letter-spacing: 0.5px;
+  color: #a6afa0;
+}
+.history-list li.active .node-index {
+  color: #5f8a63;
+}
+.node-body {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.node-body strong {
+  font-size: 10px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.node-body small {
+  font-size: 8px;
+  color: #a6afa0;
+}
+.node-fork,
+.branch-close {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px;
+  border-radius: 5px;
+  color: #a2ac9d;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.history-list li:hover .node-fork,
+.history-list li.active .node-fork {
+  opacity: 1;
+}
+.node-fork:hover,
+.branch-close:hover {
+  color: #4c7657;
+  background: #e8f0e4;
+}
+.branch-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed #e6eae2;
+}
+.branch-chip {
+  display: flex;
+  align-items: center;
+  border: 1px solid #e5eae0;
+  border-radius: 20px;
+  background: #fbfcfa;
+  overflow: hidden;
+}
+.branch-chip.active {
+  border-color: #cfe0c9;
+  background: #eef5ea;
+}
+.branch-select {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 3px 5px 8px;
+  font-size: 9px;
+  color: #72806c;
+}
+.branch-select i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+}
+.branch-select small {
+  color: #a2ab9d;
+  font-size: 8px;
+}
+.branch-close {
+  padding: 5px 7px;
+  opacity: 0.5;
+}
+.branch-chip:hover .branch-close {
+  opacity: 1;
+}
+.history-foot {
+  display: flex;
+  align-items: flex-start;
+  gap: 5px;
+  margin: 10px 0 0;
+  color: #a4ad9e;
+  font-size: 8px;
+  line-height: 1.7;
+}
+.history-foot svg {
+  flex: 0 0 auto;
+  margin-top: 2px;
+}
+@media (max-width: 1120px) {
+  .history-toolbar {
+    grid-column: 1/-1;
+  }
+}
+@media (max-width: 680px) {
+  .history-toolbar {
+    order: -2;
+    margin-bottom: 6px;
+  }
+  .history-branch-select {
+    margin-left: 0;
+    flex-basis: 100%;
+  }
+  .history-branch-select select {
+    flex: 1;
+    max-width: none;
+  }
+  .history-message {
+    font-size: 8px;
+  }
+}

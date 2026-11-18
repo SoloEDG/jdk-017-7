@@ -1,22 +1,34 @@
 import { ref } from "vue";
-import type { StudioDocument, ExportSettings } from "../../../shared/types";
+import type {
+  StudioDocument,
+  ExportSettings,
+  RenderSnapshot,
+} from "../../../shared/types";
+import type { HistoryController } from "../../history";
 import { encodeImage } from "../lib/encode";
-export function useExport(doc: StudioDocument) {
+
+export function useExport(doc: StudioDocument, history: HistoryController) {
   const busy = ref(false),
     progress = ref(0),
-    message = ref("");
+    message = ref(""),
+    exportingFrom = ref("");
   let controller: AbortController | null = null;
   async function download(settings: ExportSettings) {
     if (!doc.asset || busy.value) return;
+    // Freeze the selected history node now. The image is pinned for the whole
+    // job, so later edits, branch switches or history compaction cannot alter
+    // what this export renders.
+    const frozen = history.freezeContent();
+    if (!frozen) {
+      message.value = "当前历史节点没有可导出的素材";
+      return;
+    }
     busy.value = true;
     progress.value = 0;
     message.value = "";
+    exportingFrom.value = frozen.label;
     controller = new AbortController();
-    const snapshot = {
-        asset: doc.asset,
-        projection: { ...doc.projection },
-        edge: { ...doc.edge },
-      },
+    const snapshot: RenderSnapshot = frozen.snapshot,
       options = { ...settings };
     try {
       const blob = await encodeImage(
@@ -40,14 +52,17 @@ export function useExport(doc: StudioDocument) {
           ? e.message
           : "导出失败";
     } finally {
+      frozen.release();
       busy.value = false;
       controller = null;
+      exportingFrom.value = "";
     }
   }
   return {
     busy,
     progress,
     message,
+    exportingFrom,
     download,
     cancel: () => controller?.abort(),
   };

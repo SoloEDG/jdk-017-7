@@ -2,16 +2,24 @@
 import { reactive } from "vue";
 import { Download, ArrowDownToLine } from "lucide-vue-next";
 import type { StudioDocument, ExportSettings } from "../../../shared/types";
+import type { HistoryController } from "../../history";
 import { MatteNotice } from "../../edge";
 import { useExport } from "../model/useExport";
 import { outputSizes, estimatedMemory } from "../lib/settings";
-const { doc } = defineProps<{ doc: StudioDocument }>();
+const props = defineProps<{
+  doc: StudioDocument;
+  history: HistoryController;
+}>();
+const { doc, history } = props;
 const settings = reactive<ExportSettings>({
   size: 2048,
   format: "png",
   quality: 0.92,
 });
-const { busy, progress, message, download, cancel } = useExport(doc);
+const { busy, progress, message, exportingFrom, download, cancel } = useExport(
+  doc,
+  history,
+);
 </script>
 <template>
   <section class="panel export-panel" id="export-panel">
@@ -65,6 +73,9 @@ const { busy, progress, message, download, cancel } = useExport(doc);
         busy ? `正在导出 ${Math.round(progress * 100)}%` : "导出我的星球"
       }}<span v-if="!busy">↗</span></button
     ><button v-if="busy" class="text-button" @click="cancel">取消导出</button>
+    <p v-if="busy && exportingFrom" class="mini frozen-source" role="status">
+      导出内容已冻结：{{ exportingFrom }}
+    </p>
     <p v-if="message" role="status" class="mini">{{ message }}</p>
     <p class="export-foot">
       预估像素内存 {{ estimatedMemory(settings) }} MB · 构图不随尺寸改变

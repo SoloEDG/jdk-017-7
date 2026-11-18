@@ -2,9 +2,13 @@
 import { onMounted, ref } from "vue";
 import { Upload, Image, ArrowUpRight } from "lucide-vue-next";
 import type { StudioDocument } from "../../../shared/types";
+import type { HistoryController } from "../../history";
 import { useAssets } from "../model/useAssets";
-const props = defineProps<{ doc: StudioDocument }>();
-const { load, busy, error } = useAssets(props.doc);
+const props = defineProps<{
+  doc: StudioDocument;
+  history: HistoryController;
+}>();
+const { load, busy, error } = useAssets(props.doc, props.history);
 const input = ref<HTMLInputElement>();
 function choose(e: Event) {
   const f = (e.target as HTMLInputElement).files?.[0];

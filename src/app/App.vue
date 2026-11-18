@@ -1,12 +1,21 @@
 <script setup lang="ts">
+import { onBeforeUnmount, onMounted } from "vue";
 import { Orbit, ArrowUpRight, Camera, ChevronRight } from "lucide-vue-next";
 import { AssetPanel } from "../features/asset";
 import { ProjectionPanel } from "../features/projection";
 import { ViewportPanel, ViewControls } from "../features/viewport";
 import { EdgePanel } from "../features/edge";
 import { ExportPanel } from "../features/export";
+import {
+  HistoryPanel,
+  HistoryToolbar,
+  bindHistoryShortcuts,
+} from "../features/history";
 import { useStudio } from "./useStudio";
-const doc = useStudio();
+const { doc, history } = useStudio();
+let unbind = () => {};
+onMounted(() => (unbind = bindHistoryShortcuts(history)));
+onBeforeUnmount(() => unbind());
 </script>
 <template>
   <div class="workspace">
@@ -28,19 +37,25 @@ const doc = useStudio();
       ><span class="local-tag">本地处理 · 照片无需上传</span>
     </div>
     <div class="studio-grid">
+      <HistoryToolbar :history="history" />
       <aside class="left-sidebar">
-        <AssetPanel :doc="doc" /><ProjectionPanel :doc="doc" />
+        <AssetPanel :doc="doc" :history="history" /><ProjectionPanel
+          :doc="doc"
+          :history="history"
+        />
+        <HistoryPanel :history="history" />
         <div class="sidebar-note">
           <span>THE WORLD, REIMAGINED.</span>
           <p>把远方，装进一颗星球。</p>
           <span>✳ &nbsp; MADE FOR YOUR PERSPECTIVE</span>
         </div>
       </aside>
-      <ViewportPanel :doc="doc" />
+      <ViewportPanel :doc="doc" :history="history" />
       <aside class="right-sidebar">
-        <ViewControls :doc="doc" /><EdgePanel :doc="doc" /><ExportPanel
+        <ViewControls :doc="doc" :history="history" /><EdgePanel
           :doc="doc"
-        />
+          :history="history"
+        /><ExportPanel :doc="doc" :history="history" />
       </aside>
     </div>
     <footer>
